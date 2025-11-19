@@ -1,0 +1,194 @@
+<html>
+<head>
+<title>Очередь задач Uran</title>
+<meta http-equiv='refresh' content='300'>
+<style>
+    /* имя узла */
+    .nodename {
+      padding-right: 5px;
+      /*background: #afafaf;*/
+      color: white;
+      text-align: right;
+      width: 70px;
+      white-space: nowrap;
+    }
+    /* узел недозагружен более чем наполовину (существенно простаивает) */
+    .nodedown {
+      background: red !important; /* #4e688f  */
+    }
+     .nodenonbusy {
+      background: white !important; /* #4e688f  */
+    }
+    .nodefree {
+      background: green !important; /* #4e688f  */
+    }
+     /* узел недозагружен менее чем на треть */
+    .nodebusy30 {
+      background: green !important; /* #4e688f  */
+    }
+     .nodebusy60 {
+      background: yellow !important; /* #4e688f  */
+    }
+   /* информация по свободным ядрам */
+    .cpuinfo {
+      background: #afafaf;
+      text-align: center;
+      width: 50px;
+    }
+    /* ячейка таблицы */
+    .cell {
+      font-family: monospace;
+      /*text-align: center;*/
+      display: flex;
+        align-items: center; /* Vertically centers content */
+        justify-content: center; /* Horizontally centers content (optional) */
+
+    }
+    /* работающие задачи */
+    .running {
+      background: #c5c545;
+    }
+    /* назначенные задачи */
+    .pending {
+      background: #837c28; /* красивый #607D8B;*/
+    }
+    /* простаивание */
+    .free {
+      /*background: green;*/
+      color: #888888;
+    }
+    /* задача пользователя */
+    .highlight_user {
+      background: orange !important; /*mediumpurple;*/
+    }
+    /* подсветка выбранной job-ы */
+    .highlight_job {
+      font-weight:  bold;
+    }
+    /* граница суток */
+    .hilite_day {
+      background: #875c9394 !important;  /* #00800094*/
+    }
+    body {
+      background: #333333;
+    }
+    /* вся таблица расписания */
+    .stable {
+      /*font-size: smaller;*/
+      border-spacing: 2px 0px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(720px, 1fr));
+      gap: 2px;
+    }
+    /* строка узла */
+    .node {
+      display: grid; 
+      grid-auto-flow: column;
+    }
+
+    /* примечание внизу */
+    .note {
+      color: gray;
+      margin: 5px;
+    }
+    
+    /* таблица пользователей */
+    .utable {
+      display: flex;
+      gap: 3px;
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding: 4px;
+    }
+    /* запись об 1 пользователе */
+    .userinfo {
+      background: #c2995a /*#9989bc*/; /*поярче: mediumpurple;*/
+      margin: 3px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      /*border: 1px solid #dadada;*/
+      cursor:  pointer;
+    }
+    /* пустой пользователь */
+    .user_::before {
+      content: ";-]";
+    }
+    /* заголовок таблицы */
+    h3 {
+      color: #d8d8d8;
+      text-align: center;
+      margin-bottom: 10px;
+      margin-top: 12px;    
+    }
+
+    </style>
+</head>
+<body>
+
+<h3> Очередь задач Uran PUT_TIME </h3>
+
+<div class='stable'>
+PUT_TABLE
+</div>
+
+<div class='note'>
+  Легенда: Имя узла, [свободно-cpu/всего-cpu], 1..9+ = число задач на узле, # = запланировано<br> Серый фон - узел загружен полностью. Красный фон - узел выключен. Вертикальная полоса - граница суток
+</div>
+
+<div class='utable'>
+PUT_USERS
+</div>
+
+<script>
+// навешиваем обработчик на все элементы .userinfo
+document.querySelectorAll('.userinfo').forEach(el => {
+  el.addEventListener('click', () => {
+    const T = el.textContent.trim(); // содержимое текста    
+    highlightUser(T);
+  });
+});
+
+function highlightUser(T) {
+  // 1) убрать подсветку со всех .uitem
+  document.querySelectorAll('.uelem').forEach(item => {
+    item.classList.remove('highlight_user');
+    item.classList.remove('highlight_job');
+  });
+
+  // 2) найти все элементы с name="user_T" и подсветить их
+  const targetName = 'user_' + T;
+  const nodes = document.getElementsByClassName(targetName); // возвращает HTMLCollection
+  //console.log(nodes)
+
+  Array.from(nodes).forEach(node => {
+    // если нужно подсвечивать только те, которые имеют класс uitem, можно проверить:
+    // if (node.classList.contains('uitem')) { node.classList.add('highlight'); }
+    // иначе подсвечивать все найденные:
+    node.classList.add('highlight_user');
+  });
+  
+  // save to hash
+  location.hash = encodeURIComponent(T);
+}
+
+document.addEventListener('DOMContentLoaded', () => { 
+  // Обрабатываем изменение hash (включая back/forward)
+  window.addEventListener('hashchange', processHash);
+  // вроде не зацикливается
+
+  // При первой загрузке страницы
+  processHash();
+});
+
+function processHash() {
+  const raw = location.hash.slice(1); // убираем '#'
+  const T = raw ? decodeURIComponent(raw) : '';
+  if (T)
+     highlightUser(T);
+}
+
+</script>
+
+</body>
+</html>
